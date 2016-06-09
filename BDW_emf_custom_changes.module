@@ -1,0 +1,72 @@
+<?php
+/* Implement hook_emf_account_subscription_requires_update
+ */
+function BDW_emf_custom_changes_emf_account_subscription_requires_update($account, $original_account) {
+  if ($account->mail != $original_account->mail ||
+      $account->roles != $original_account->roles ||
+      $account->name != $original_account->name) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/* Implement hook_user_insert
+ */
+function BDW_emf_custom_changes_user_insert(&$edit, $account, $category)
+{
+  // Subscribe autoomatically to following lists
+  $lists = array(
+    'Members' => '86645331be3d959b19c09e9c03fcd197',
+  );
+  foreach ($lists as $lid) {
+    $field_values = emf_helpers_parse_field_values($lid, $account);
+    emf_helpers_subscribe($account->mail, $lid, $field_values);
+  }
+}
+
+function BDW_emf_custom_changes_simplenews_sync($account) {
+  // Don't subscribe blocked users
+  if (!$account->status)
+    return;
+
+  // Don't subscribe people who have deactivated their subscriptions via simplenews
+  if (!simplenews_user_is_subscribed($account->mail, 1))
+  {
+    return;
+  }
+  // Subscribe autoomatically to following lists
+  $lists = array(
+    'Members' => '86645331be3d959b19c09e9c03fcd197',
+  );
+  foreach ($lists as $lid) {
+    $field_values = emf_helpers_parse_field_values($lid, $account);
+    emf_helpers_subscribe($account->mail, $lid, $field_values);
+  }
+}
+
+function BDW_emf_custom_changes_get_roles($account)
+{
+  $roles = array();
+  if (user_has_role(8, $account)) {
+    $roles['full member'] = 'full member';
+  }
+  if (user_has_role(18, $account)) {
+    $roles['expired member'] = 'expired member';
+  }
+  if (user_has_role(3, $account)) {
+    $roles['founding member'] = 'founding member';
+  }
+  if (user_has_role(19, $account)) {
+    $roles['affiliate'] = 'affiliate';
+  }
+  if (user_has_role(20, $account)) {
+    $roles['paid member'] = 'paid member';
+  }
+
+  $flag=flag_get_flag('boondocking_available');
+  if ($flag->is_flagged($account->uid))
+  {
+    $roles['host'] = 'host';
+  }
+  return $roles;
+}

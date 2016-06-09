@@ -1,0 +1,5 @@
+name = BDW_emf_custom_changes
+description = changes needed for Boondockers Welcome Website to support email marketing framework
+version = "7.x-dev"
+project = "BDW_emf_custom_changes"
+core = "7.x"
